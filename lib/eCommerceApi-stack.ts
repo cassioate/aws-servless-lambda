@@ -6,6 +6,7 @@ import { Construct } from "constructs"
 
 interface ECommerceApiStackProps extends cdk.StackProps {
   productsFetchHandler: lambdaNodeJs.NodejsFunction
+  productsAdminHandler: lambdaNodeJs.NodejsFunction
 }
 
 export class ECommerceApiStack extends cdk.Stack {
@@ -36,13 +37,29 @@ export class ECommerceApiStack extends cdk.Stack {
       }
     })
 
-    this.productsFetchIntegrationConstructor(props)
+    const productResource = this.api.root.addResource("products")
+    const productIdResource = productResource.addResource("{id}")
+
+    this.productsFetchIntegrationConstructor(props, productResource, productIdResource)
+    this.productsAdminIntegrationConstructor(props, productResource, productIdResource)
   }
 
-  // "/products"
-  async productsFetchIntegrationConstructor(props: ECommerceApiStackProps): Promise<void> {
-    const productsFetchIntegration = new apiGateway.LambdaIntegration(props.productsFetchHandler)
-    const productResource = this.api.root.addResource("products")
+  // GET | /products
+  async productsFetchIntegrationConstructor(props: ECommerceApiStackProps, 
+    productResource: cdk.aws_apigateway.Resource, productIdResource: cdk.aws_apigateway.Resource): Promise<void> {
+    
+      const productsFetchIntegration = new apiGateway.LambdaIntegration(props.productsFetchHandler)
     productResource.addMethod("GET", productsFetchIntegration)
+    productIdResource.addMethod("GET", productsFetchIntegration)
+  }
+
+  // POST - PUT - DELETE | /products
+  async productsAdminIntegrationConstructor(props: ECommerceApiStackProps, 
+    productResource: cdk.aws_apigateway.Resource, productIdResource: cdk.aws_apigateway.Resource): Promise<void> {
+
+    const productsAdminIntegration = new apiGateway.LambdaIntegration(props.productsAdminHandler)
+    productResource.addMethod("POST", productsAdminIntegration)  
+    productIdResource.addMethod("PUT", productsAdminIntegration)
+    productIdResource.addMethod("DELETE", productsAdminIntegration)
   }
 }

@@ -21,5 +21,6 @@ cdk init --language typescript
 
 cdk list
 cdk diff
-cdk deploy --all
 cdk destroy --all
+cdk deploy --all
+cdk deploy --all --require-approval never
